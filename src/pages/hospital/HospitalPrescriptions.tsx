@@ -496,6 +496,17 @@ const FeedbackDrawer = ({ rx, feedback, onClose }: { rx: any; feedback: any | nu
   const ratingLabels = ['', 'Much worse', 'Worse', 'Same', 'Better', 'Much better'];
   const ratingEmojis = ['', '😞', '😕', '😐', '🙂', '😊'];
 
+  const [showPharmaSelect, setShowPharmaSelect] = useState(false);
+  const [selectedPharma, setSelectedPharma] = useState('');
+
+  const mockPharmacies = [
+    'Apollo Pharmacy Network',
+    'Wellness Forever',
+    'MedPlus Stores',
+    'Netmeds Local Providers',
+    'Sanjeevani Partner Pharmacies'
+  ];
+
   return (
     <div className="fixed inset-0 z-[90] flex justify-end">
       <div className="absolute inset-0 bg-black/20" onClick={onClose} />
@@ -573,22 +584,62 @@ const FeedbackDrawer = ({ rx, feedback, onClose }: { rx: any; feedback: any | nu
 
               {/* Action buttons */}
               <div className="flex flex-col gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    toast.success('🔄 Sending feedback report securely to Pharmacy Network...');
-                    generatePharmacyAlertReportPDF({
-                      diagnosis: rx.diagnosis,
-                      feedback,
-                    });
-                    setTimeout(() => {
-                      toast.success('✅ Patient feedback successfully shared with Pharmacies!');
-                    }, 1500);
-                  }}
-                  className="w-full py-2.5 rounded-lg text-[13px] font-bold text-white flex items-center justify-center gap-2 transition-all hover:bg-cyan-700"
-                  style={{ background: '#0891B2' }}
-                >
-                  <AlertTriangle size={14} /> Send Report to Pharmacy Network
-                </button>
+                {!showPharmaSelect ? (
+                  <button
+                    onClick={() => setShowPharmaSelect(true)}
+                    className="w-full py-2.5 rounded-lg text-[13px] font-bold text-white flex items-center justify-center gap-2 transition-all hover:bg-cyan-700"
+                    style={{ background: '#0891B2' }}
+                  >
+                    <AlertTriangle size={14} /> Send Report to Pharmacy Network
+                  </button>
+                ) : (
+                  <div className="p-3 rounded-lg border" style={{ borderColor: '#E2EEF1', background: '#F8FAFC' }}>
+                    <p className="text-[12px] font-bold mb-2 text-[#1E293B]">Select Partner Pharmacy Data Hub</p>
+                    <select 
+                      className="w-full mb-2 p-2 rounded border text-[13px]" 
+                      style={{ borderColor: '#E2EEF1' }}
+                      value={selectedPharma}
+                      onChange={(e) => setSelectedPharma(e.target.value)}
+                    >
+                      <option value="">-- Choose Pharmacy Network --</option>
+                      {mockPharmacies.map(p => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (!selectedPharma) {
+                            toast.error('Please select a pharmacy first.');
+                            return;
+                          }
+                          toast.success(`🔄 Preparing anonymous alert for ${selectedPharma}...`);
+                          generatePharmacyAlertReportPDF({
+                            diagnosis: rx.diagnosis,
+                            feedback,
+                          });
+                          setTimeout(() => {
+                            toast.success(`✅ Anonymous feedback successfully securely routed to ${selectedPharma}!`);
+                            setShowPharmaSelect(false);
+                          }, 1500);
+                        }}
+                        className="flex-1 py-2 rounded-lg text-[12px] font-bold text-white transition-all bg-[#0891B2] hover:bg-cyan-700"
+                      >
+                        Send Alert Securely
+                      </button>
+                      <button
+                        onClick={() => setShowPharmaSelect(false)}
+                        className="px-3 py-2 rounded-lg text-[12px] font-bold border hover:bg-gray-50"
+                        style={{ color: '#64748B', borderColor: '#E2EEF1' }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-center mt-2 text-[#64748B]">
+                      * Note: Only anonymous medical analytics and symptomatic results will be shared. No personal identifiable information (PII) is transmitted.
+                    </p>
+                  </div>
+                )}
 
                 <button
                   onClick={() => {
