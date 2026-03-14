@@ -1,10 +1,12 @@
 import { Menu, LogOut } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
+import LanguageSwitcher from '@/components/patient/dashboard/LanguageSwitcher';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import type { PatientProfile } from './PatientProtectedRoute';
 
-const routeLabels: Record<string, string> = {
+const routeKeys: Record<string, string> = {
   '/patient/dashboard': 'Overview',
   '/patient/dashboard/records': 'Medical Records',
   '/patient/dashboard/reports': 'Lab Reports',
@@ -22,7 +24,9 @@ interface Props {
 const PatientTopBar = ({ patient, onMenuClick }: Props) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const pageLabel = routeLabels[location.pathname] || 'Dashboard';
+  const { t } = useLanguage();
+  const routeKey = routeKeys[location.pathname] || 'Dashboard';
+  const pageLabel = t(routeKey);
   const initials = patient.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'P';
 
   const handleLogout = async () => {
@@ -37,12 +41,13 @@ const PatientTopBar = ({ patient, onMenuClick }: Props) => {
       </button>
 
       <div className="flex items-center gap-1.5 text-[13px]" style={{ fontFamily: 'Inter, sans-serif' }}>
-        <span style={{ color: '#64748B' }}>My Health</span>
+        <span style={{ color: '#64748B' }}>{t('My Health')}</span>
         <span style={{ color: '#64748B' }}>/</span>
         <span className="font-semibold" style={{ color: '#1E293B' }}>{pageLabel}</span>
       </div>
 
       <div className="ml-auto flex items-center gap-3">
+        <LanguageSwitcher />
         <NotificationBell userId={patient.supabase_user_id} />
         <span className="text-[13px] font-medium hidden sm:block" style={{ color: '#1E293B' }}>{patient.full_name}</span>
         {patient.profile_photo_url ? (
@@ -61,3 +66,4 @@ const PatientTopBar = ({ patient, onMenuClick }: Props) => {
 };
 
 export default PatientTopBar;
+

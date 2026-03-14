@@ -1,17 +1,18 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, Pill, ClipboardList, Calendar, Search, ShieldAlert, Settings, LogOut, X, QrCode, Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import type { PatientProfile } from './PatientProtectedRoute';
 
 const navItems = [
-  { label: 'Overview', icon: Home, path: '/patient/dashboard' },
-  { label: 'Medical Records', icon: Pill, path: '/patient/dashboard/records' },
-  { label: 'Lab Reports', icon: ClipboardList, path: '/patient/dashboard/reports' },
-  { label: 'Appointments', icon: Calendar, path: '/patient/dashboard/appointments' },
-  { label: 'Find Doctors', icon: Search, path: '/patient/dashboard/find' },
-  { label: 'Find Pharmacy', icon: Store, path: '/patient/dashboard/pharmacy' },
-  { label: 'Emergency Profile', icon: ShieldAlert, path: '/patient/dashboard/emergency' },
-  { label: 'Settings', icon: Settings, path: '/patient/dashboard/settings' },
+  { labelKey: 'Overview', icon: Home, path: '/patient/dashboard' },
+  { labelKey: 'Medical Records', icon: Pill, path: '/patient/dashboard/records' },
+  { labelKey: 'Lab Reports', icon: ClipboardList, path: '/patient/dashboard/reports' },
+  { labelKey: 'Appointments', icon: Calendar, path: '/patient/dashboard/appointments' },
+  { labelKey: 'Find Doctors', icon: Search, path: '/patient/dashboard/find' },
+  { labelKey: 'Find Pharmacy', icon: Store, path: '/patient/dashboard/pharmacy' },
+  { labelKey: 'Emergency Profile', icon: ShieldAlert, path: '/patient/dashboard/emergency' },
+  { labelKey: 'Settings', icon: Settings, path: '/patient/dashboard/settings' },
 ];
 
 const LotusIcon = () => (
@@ -39,6 +40,7 @@ interface Props {
 const PatientSidebar = ({ patient, mobileOpen, onMobileClose, onShowQR }: Props) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const firstName = patient.full_name?.split(' ')[0] || 'Patient';
 
   const handleLogout = async () => {
@@ -61,17 +63,17 @@ const PatientSidebar = ({ patient, mobileOpen, onMobileClose, onShowQR }: Props)
         </div>
 
         <p className="text-[13px] mb-2" style={{ color: '#64748B', fontFamily: 'Inter, sans-serif' }}>
-          Welcome, {firstName}
+          {t('Welcome')}, {firstName}
         </p>
         {patient.abha_card_no ? (
           <span className="inline-block text-[11px] font-semibold px-3 py-1 rounded-md" style={{ background: '#0891B2', color: '#fff' }}>
-            ABHA Linked ✓
+            {t('ABHA Linked')}
           </span>
         ) : (
           <button onClick={() => navigate('/patient/dashboard/settings')}
             className="inline-block text-[11px] font-semibold px-3 py-1 rounded-md"
             style={{ border: '1px solid #F59E0B', color: '#F59E0B' }}>
-            Link ABHA →
+            {t('Link ABHA')}
           </button>
         )}
       </div>
@@ -93,7 +95,7 @@ const PatientSidebar = ({ patient, mobileOpen, onMobileClose, onShowQR }: Props)
               }}
             >
               <item.icon size={18} />
-              {item.label}
+              {t(item.labelKey)}
             </button>
           );
         })}
@@ -106,8 +108,8 @@ const PatientSidebar = ({ patient, mobileOpen, onMobileClose, onShowQR }: Props)
           style={{ background: 'rgba(8,145,178,0.08)', border: '1px solid #0891B2' }}>
           <QrCode size={24} style={{ color: '#0891B2' }} />
           <div className="text-left">
-            <p className="text-[13px] font-bold" style={{ color: '#0891B2' }}>My Emergency QR</p>
-            <p className="text-[11px]" style={{ color: '#64748B' }}>Tap to view & download</p>
+            <p className="text-[13px] font-bold" style={{ color: '#0891B2' }}>{t('My Emergency QR')}</p>
+            <p className="text-[11px]" style={{ color: '#64748B' }}>{t('Tap to view & download')}</p>
           </div>
         </button>
       </div>
@@ -119,7 +121,7 @@ const PatientSidebar = ({ patient, mobileOpen, onMobileClose, onShowQR }: Props)
           {patient.email}
         </p>
         <button onClick={handleLogout} className="text-[13px] font-medium mt-2 transition-colors hover:opacity-80" style={{ color: '#EF4444', fontFamily: 'Inter, sans-serif' }}>
-          <LogOut size={14} className="inline mr-1.5" /> Logout
+          <LogOut size={14} className="inline mr-1.5" /> {t('Logout')}
         </button>
       </div>
     </div>
@@ -149,3 +151,4 @@ const PatientSidebar = ({ patient, mobileOpen, onMobileClose, onShowQR }: Props)
 };
 
 export default PatientSidebar;
+
