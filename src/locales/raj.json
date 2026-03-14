@@ -15,6 +15,8 @@
   },
   "welcome": {
     "greeting": "राम राम सा",
+    "greetingAfternoon": "राम राम सा",
+    "greetingEvening": "राम राम सा",
     "profileStatus": "थारी स्वास्थ्य प्रोफाइल {{completeness}}% पूरो है।",
     "completeProfile": "थारी प्रोफाइल पूरी करो →"
   },

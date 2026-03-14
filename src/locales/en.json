@@ -15,6 +15,8 @@
   },
   "welcome": {
     "greeting": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
     "profileStatus": "Your health profile is {{completeness}}% complete.",
     "completeProfile": "Complete your profile →"
   },

@@ -119,7 +119,11 @@ const PatientOverview = () => {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="flex-1">
             <h1 className="text-[22px] font-bold mb-1" style={{ fontFamily: '"Plus Jakarta Sans", sans-serif', color: '#1E293B' }}>
-              {t('welcome.greeting')}, {firstName} 👋
+              {(() => {
+                const hour = new Date().getHours();
+                const key = hour < 12 ? 'welcome.greeting' : hour < 17 ? 'welcome.greetingAfternoon' : 'welcome.greetingEvening';
+                return t(key);
+              })()}, {firstName} 👋
             </h1>
             <p className="text-[14px] mb-3" style={{ color: '#64748B' }}>
               {t('welcome.profileStatus', { completeness })}

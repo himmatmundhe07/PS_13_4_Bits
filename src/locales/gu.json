@@ -15,6 +15,8 @@
   },
   "welcome": {
     "greeting": "સુપ્રભાત",
+    "greetingAfternoon": "શુભ બપોર",
+    "greetingEvening": "શુભ સાંજ",
     "profileStatus": "તમારી સ્વાસ્થ્ય પ્રોફાઇલ {{completeness}}% પૂર્ણ છે.",
     "completeProfile": "તમારી પ્રોફાઇલ પૂર્ણ કરો →"
   },
