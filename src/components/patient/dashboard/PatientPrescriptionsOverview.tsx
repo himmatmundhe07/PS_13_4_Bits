@@ -26,17 +26,6 @@ const PatientPrescriptionsOverview = ({ patientId }: { patientId: string }) => {
 
     if (rxData) {
       setPrescriptions(rxData);
-
-      // HACKATHON MODE: Show feedback form for any prescription that requested feedback
-      // and hasn't been submitted yet — no deadline check
-      for (const rx of rxData) {
-        if (rx.feedback_requested) {
-          if ((!rx.prescription_feedback || rx.prescription_feedback.length === 0) && !showFeedbackFor) {
-            setShowFeedbackFor(rx);
-            break;
-          }
-        }
-      }
     }
 
     // Fetch today's medicines
