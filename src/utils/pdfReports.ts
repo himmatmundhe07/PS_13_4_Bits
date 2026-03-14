@@ -2,19 +2,20 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 
-/* ─── Color palette matching Sanjeevani brand ─── */
+/* --- Color palette matching Sanjeevani brand --- */
 const COLORS = {
-  primary: [8, 145, 178] as [number, number, number],     // #0891B2
-  accent: [245, 158, 11] as [number, number, number],     // #F59E0B
-  dark: [30, 41, 59] as [number, number, number],         // #1E293B
-  gray: [100, 116, 139] as [number, number, number],      // #64748B
-  lightBg: [235, 247, 250] as [number, number, number],   // #EBF7FA
+  primary: [8, 145, 178] as [number, number, number],
+  accent: [245, 158, 11] as [number, number, number],
+  dark: [30, 41, 59] as [number, number, number],
+  gray: [100, 116, 139] as [number, number, number],
+  lightBg: [235, 247, 250] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
-  green: [16, 185, 129] as [number, number, number],      // #10B981
-  red: [239, 68, 68] as [number, number, number],         // #EF4444
+  green: [16, 185, 129] as [number, number, number],
+  red: [239, 68, 68] as [number, number, number],
+  purple: [139, 92, 246] as [number, number, number],
 };
 
-/* ─── Shared Header ─── */
+/* --- Shared Header --- */
 function addHeader(doc: jsPDF, title: string, subtitle?: string) {
   const w = doc.internal.pageSize.getWidth();
 
@@ -30,10 +31,10 @@ function addHeader(doc: jsPDF, title: string, subtitle?: string) {
   doc.setTextColor(...COLORS.primary);
   doc.text('Sanjeevani', 14, 18);
 
-  // Diamond divider
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.accent);
-  doc.text('◇ ——— ◇', 14, 23);
+  // Divider line (no emojis)
+  doc.setDrawColor(...COLORS.accent);
+  doc.setLineWidth(0.5);
+  doc.line(14, 21, 60, 21);
 
   // Title
   doc.setFontSize(16);
@@ -52,7 +53,7 @@ function addHeader(doc: jsPDF, title: string, subtitle?: string) {
   doc.text(`Generated: ${format(new Date(), 'dd MMM yyyy, hh:mm a')}`, w - 14, 18, { align: 'right' });
 }
 
-/* ─── Shared Footer ─── */
+/* --- Shared Footer --- */
 function addFooter(doc: jsPDF) {
   const w = doc.internal.pageSize.getWidth();
   const h = doc.internal.pageSize.getHeight();
@@ -60,12 +61,12 @@ function addFooter(doc: jsPDF) {
   doc.rect(0, h - 12, w, 12, 'F');
   doc.setFontSize(7);
   doc.setTextColor(...COLORS.gray);
-  doc.text('Sanjeevani — Digital Health Platform  |  This is a computer-generated document', w / 2, h - 5, { align: 'center' });
+  doc.text('Sanjeevani -- Digital Health Platform  |  This is a computer-generated document', w / 2, h - 5, { align: 'center' });
 }
 
-/* ════════════════════════════════════════════════
-   1. PRESCRIPTION PDF — Doctor issues → Patient downloads
-   ════════════════════════════════════════════════ */
+/* =====================================================
+   1. PRESCRIPTION PDF
+   ===================================================== */
 export function generatePrescriptionPDF(rx: {
   patientName: string;
   patientAge?: number;
@@ -92,7 +93,7 @@ export function generatePrescriptionPDF(rx: {
   const doc = new jsPDF();
   const w = doc.internal.pageSize.getWidth();
 
-  addHeader(doc, '💊 Prescription', `${rx.hospitalName}${rx.hospitalCity ? ' — ' + rx.hospitalCity : ''}`);
+  addHeader(doc, 'Prescription', `${rx.hospitalName}${rx.hospitalCity ? ' -- ' + rx.hospitalCity : ''}`);
 
   let y = 44;
 
@@ -129,7 +130,7 @@ export function generatePrescriptionPDF(rx: {
   // Date line
   doc.setFontSize(8);
   doc.setTextColor(...COLORS.gray);
-  doc.text(`Date: ${rx.prescriptionDate ? format(new Date(rx.prescriptionDate), 'dd MMM yyyy') : '—'}`, 14, y);
+  doc.text(`Date: ${rx.prescriptionDate ? format(new Date(rx.prescriptionDate), 'dd MMM yyyy') : '--'}`, 14, y);
   if (rx.validUntil) {
     doc.text(`Valid Until: ${format(new Date(rx.validUntil), 'dd MMM yyyy')}`, w - 14, y, { align: 'right' });
   }
@@ -138,19 +139,19 @@ export function generatePrescriptionPDF(rx: {
   // Rx symbol
   doc.setFontSize(28);
   doc.setTextColor(...COLORS.primary);
-  doc.text('℞', 14, y + 10);
+  doc.text('Rx', 14, y + 10);
   y += 4;
 
   // Medicines table
   const medRows = rx.medicines.map((m, idx) => {
-    const scheduleStr = (m.schedule || []).map(s => `${s.label} (${s.time}) — ${s.with}`).join('\n');
+    const scheduleStr = (m.schedule || []).map(s => `${s.label} (${s.time}) -- ${s.with}`).join('\n');
     return [
       String(idx + 1),
       `${m.name}\n${m.form}`,
       m.dosage,
-      `${m.timesPerDay}× / day\n${m.durationDays} days`,
-      scheduleStr || '—',
-      m.specialInstructions || '—',
+      `${m.timesPerDay}x / day\n${m.durationDays} days`,
+      scheduleStr || '--',
+      m.specialInstructions || '--',
     ];
   });
 
@@ -190,13 +191,12 @@ export function generatePrescriptionPDF(rx: {
   doc.text('Authorized Signatory', w - 42, y + 22, { align: 'center' });
 
   addFooter(doc);
-
   doc.save(`Prescription_${rx.patientName.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }
 
-/* ════════════════════════════════════════════════
-   2. FEEDBACK REPORT PDF — Per-patient feedback
-   ════════════════════════════════════════════════ */
+/* =====================================================
+   2. FEEDBACK REPORT PDF
+   ===================================================== */
 export function generateFeedbackPDF(data: {
   patientName: string;
   patientAge?: number;
@@ -224,9 +224,8 @@ export function generateFeedbackPDF(data: {
   const w = doc.internal.pageSize.getWidth();
   const fb = data.feedback;
   const ratingLabels = ['', 'Much worse', 'Worse', 'Same', 'Better', 'Much better'];
-  const ratingEmojis = ['', '😞', '😕', '😐', '🙂', '😊'];
 
-  addHeader(doc, '📊 Patient Feedback Report', data.hospitalName);
+  addHeader(doc, 'Patient Feedback Report', data.hospitalName);
 
   let y = 44;
 
@@ -241,15 +240,15 @@ export function generateFeedbackPDF(data: {
   doc.setFontSize(9);
   doc.text(`Dr. ${data.doctorName} | Diagnosis: ${data.diagnosis}`, 18, y + 14);
   doc.setTextColor(...COLORS.gray);
-  doc.text(`Rx Date: ${data.prescriptionDate ? format(new Date(data.prescriptionDate), 'dd MMM yyyy') : '—'}`, w - 18, y + 7, { align: 'right' });
+  doc.text(`Rx Date: ${data.prescriptionDate ? format(new Date(data.prescriptionDate), 'dd MMM yyyy') : '--'}`, w - 18, y + 7, { align: 'right' });
   y += 28;
 
-  // Big rating cards
+  // Rating cards
   const cardW = (w - 42) / 3;
   const cards = [
-    { label: 'Improvement', value: `${ratingLabels[fb.improvement_rating] || '—'}`, sub: `${fb.improvement_rating}/5`, color: COLORS.green },
+    { label: 'Improvement', value: ratingLabels[fb.improvement_rating] || '--', sub: `${fb.improvement_rating}/5`, color: COLORS.green },
     { label: 'Adherence', value: fb.adherence_rating, sub: '', color: COLORS.primary },
-    { label: 'Pain Change', value: `${fb.pain_level_before} → ${fb.pain_level_after}`, sub: `${fb.pain_level_before > fb.pain_level_after ? '↓ Improved' : fb.pain_level_before === fb.pain_level_after ? '= Same' : '↑ Worsened'}`, color: fb.pain_level_before > fb.pain_level_after ? COLORS.green : COLORS.red },
+    { label: 'Pain Change', value: `${fb.pain_level_before} -> ${fb.pain_level_after}`, sub: fb.pain_level_before > fb.pain_level_after ? 'Improved' : fb.pain_level_before === fb.pain_level_after ? 'Same' : 'Worsened', color: fb.pain_level_before > fb.pain_level_after ? COLORS.green : COLORS.red },
   ];
 
   cards.forEach((c, i) => {
@@ -269,14 +268,15 @@ export function generateFeedbackPDF(data: {
   });
   y += 30;
 
-  // Symptoms resolved
+  // Symptoms
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.dark);
   doc.text('Symptoms Resolved:', 14, y);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(fb.symptoms_resolved ? COLORS.green[0] : COLORS.red[0], fb.symptoms_resolved ? COLORS.green[1] : COLORS.red[1], fb.symptoms_resolved ? COLORS.green[2] : COLORS.red[2]);
-  doc.text(fb.symptoms_resolved ? '✅ Yes' : '❌ No', 58, y);
+  const symColor = fb.symptoms_resolved ? COLORS.green : COLORS.red;
+  doc.setTextColor(...symColor);
+  doc.text(fb.symptoms_resolved ? 'Yes' : 'No', 58, y);
   y += 8;
 
   // Side effects
@@ -286,7 +286,7 @@ export function generateFeedbackPDF(data: {
   if (fb.had_side_effects) {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.red);
-    doc.text(`⚠️ ${fb.side_effect_severity || ''}  —  ${(fb.side_effects || []).join(', ')}`, 46, y);
+    doc.text(`${fb.side_effect_severity || ''} -- ${(fb.side_effects || []).join(', ')}`, 46, y);
   } else {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.green);
@@ -294,7 +294,7 @@ export function generateFeedbackPDF(data: {
   }
   y += 10;
 
-  // Medicine-wise feedback
+  // Medicine feedback
   if (fb.medicine_feedback && fb.medicine_feedback.length > 0) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
@@ -302,16 +302,10 @@ export function generateFeedbackPDF(data: {
     doc.text('Medicine-wise Feedback', 14, y);
     y += 4;
 
-    const medRows = fb.medicine_feedback.map(mf => [
-      mf.medicine_name,
-      `${mf.rating}/5`,
-      mf.notes || '—',
-    ]);
-
     autoTable(doc, {
       startY: y,
       head: [['Medicine', 'Rating', 'Patient Notes']],
-      body: medRows,
+      body: fb.medicine_feedback.map(mf => [mf.medicine_name, `${mf.rating}/5`, mf.notes || '--']),
       theme: 'striped',
       styles: { fontSize: 9, cellPadding: 3, textColor: COLORS.dark },
       headStyles: { fillColor: COLORS.accent, textColor: COLORS.white, fontStyle: 'bold' },
@@ -337,9 +331,9 @@ export function generateFeedbackPDF(data: {
   doc.save(`Feedback_Report_${data.patientName.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }
 
-/* ════════════════════════════════════════════════
-   3. ANALYTICS REPORT PDF — Aggregated hospital report
-   ════════════════════════════════════════════════ */
+/* =====================================================
+   3. ANALYTICS REPORT PDF
+   ===================================================== */
 export function generateAnalyticsReportPDF(data: {
   hospitalName: string;
   totalPrescriptions: number;
@@ -356,7 +350,7 @@ export function generateAnalyticsReportPDF(data: {
   const doc = new jsPDF();
   const w = doc.internal.pageSize.getWidth();
 
-  addHeader(doc, '📈 Prescription Analytics Report', data.hospitalName);
+  addHeader(doc, 'Prescription Analytics Report', data.hospitalName);
 
   let y = 44;
 
@@ -382,7 +376,7 @@ export function generateAnalyticsReportPDF(data: {
   });
   y += 26;
 
-  // Section: Top Medicines
+  // Top Medicines
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.dark);
@@ -409,7 +403,7 @@ export function generateAnalyticsReportPDF(data: {
     y += 14;
   }
 
-  // Section: Medicine Effectiveness
+  // Medicine Effectiveness
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.dark);
@@ -423,7 +417,7 @@ export function generateAnalyticsReportPDF(data: {
       body: data.effectivenessData.map(m => [
         m.name,
         m.rating.toFixed(1),
-        m.rating >= 4 ? '✅ Effective' : m.rating >= 3 ? '🟡 Moderate' : '⚠️ Low',
+        m.rating >= 4 ? 'Effective' : m.rating >= 3 ? 'Moderate' : 'Low',
       ]),
       theme: 'striped',
       styles: { fontSize: 9, cellPadding: 3, textColor: COLORS.dark },
@@ -439,12 +433,12 @@ export function generateAnalyticsReportPDF(data: {
     y += 14;
   }
 
-  // New page for more sections
+  // New page
   doc.addPage();
-  addHeader(doc, '📈 Analytics Report (continued)', data.hospitalName);
+  addHeader(doc, 'Analytics Report (continued)', data.hospitalName);
   y = 44;
 
-  // Section: Age Group Analysis
+  // Age Group
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.dark);
@@ -458,7 +452,7 @@ export function generateAnalyticsReportPDF(data: {
       a.group,
       a.rating > 0 ? a.rating.toFixed(1) + '/5' : 'No data',
       String(a.count),
-      a.count === 0 ? '—' : a.rating >= 4 ? '✅ Great response' : a.rating >= 3 ? '🟡 Moderate' : '⚠️ Below average',
+      a.count === 0 ? '--' : a.rating >= 4 ? 'Great response' : a.rating >= 3 ? 'Moderate' : 'Below average',
     ]),
     theme: 'striped',
     styles: { fontSize: 9, cellPadding: 3, textColor: COLORS.dark },
@@ -467,7 +461,7 @@ export function generateAnalyticsReportPDF(data: {
   });
   y = (doc as any).lastAutoTable.finalY + 8;
 
-  // Section: Side Effects
+  // Side Effects
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.dark);
@@ -479,9 +473,8 @@ export function generateAnalyticsReportPDF(data: {
       startY: y,
       head: [['Side Effect', 'Reports', '% of Feedback']],
       body: data.sideEffects.map(se => [
-        se.name,
-        String(se.value),
-        data.totalFeedback > 0 ? ((se.value / data.totalFeedback) * 100).toFixed(0) + '%' : '—',
+        se.name, String(se.value),
+        data.totalFeedback > 0 ? ((se.value / data.totalFeedback) * 100).toFixed(0) + '%' : '--',
       ]),
       theme: 'striped',
       styles: { fontSize: 9, cellPadding: 3, textColor: COLORS.dark },
@@ -497,7 +490,7 @@ export function generateAnalyticsReportPDF(data: {
     y += 14;
   }
 
-  // Section: Adherence
+  // Adherence
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.dark);
@@ -508,16 +501,294 @@ export function generateAnalyticsReportPDF(data: {
     startY: y,
     head: [['Adherence Level', 'Patients', 'Assessment']],
     body: data.adherenceData.map(a => [
-      a.name,
-      String(a.value),
-      a.name === 'Always' || a.name === 'Mostly' ? '✅ Good' : a.name === 'Sometimes' ? '🟡 Moderate' : '⚠️ Needs attention',
+      a.name, String(a.value),
+      a.name === 'Always' || a.name === 'Mostly' ? 'Good' : a.name === 'Sometimes' ? 'Moderate' : 'Needs attention',
     ]),
     theme: 'striped',
     styles: { fontSize: 9, cellPadding: 3, textColor: COLORS.dark },
-    headStyles: { fillColor: [139, 92, 246], textColor: COLORS.white },
+    headStyles: { fillColor: COLORS.purple, textColor: COLORS.white },
     margin: { left: 14, right: 14 },
   });
 
   addFooter(doc);
   doc.save(`Analytics_Report_${data.hospitalName.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+}
+
+/* =====================================================
+   4. COMPLETE PATIENT PROFILE PDF — Full medical summary
+   ===================================================== */
+export function generatePatientProfilePDF(data: {
+  fullName: string;
+  age?: number;
+  gender?: string;
+  bloodGroup?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pinCode?: string;
+  dateOfBirth?: string;
+  abhaCardNo?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactPhone?: string;
+  allergies?: string[];
+  chronicConditions?: string[];
+  pastSurgeries?: string[];
+  disabilities?: string[];
+  currentMedications?: string[];
+  organDonor?: boolean;
+  insurance?: {
+    provider?: string;
+    policyNo?: string;
+    type?: string;
+    validUntil?: string;
+    sumInsured?: string;
+  };
+  pastTreatments?: {
+    type: string;
+    title: string;
+    hospital_name: string;
+    doctor_name: string;
+    date: string;
+    end_date?: string;
+    diagnosis: string;
+    outcome: string;
+    notes?: string;
+  }[];
+  prescriptions?: {
+    doctorName: string;
+    diagnosis: string;
+    date: string;
+    status: string;
+    medicineCount: number;
+  }[];
+}) {
+  const doc = new jsPDF();
+  const w = doc.internal.pageSize.getWidth();
+
+  addHeader(doc, 'Complete Medical Profile', 'Sanjeevani Health Platform');
+
+  let y = 44;
+
+  // Patient Name Banner
+  doc.setFillColor(...COLORS.primary);
+  doc.roundedRect(14, y, w - 28, 16, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(...COLORS.white);
+  doc.text(data.fullName, 20, y + 11);
+  if (data.bloodGroup) {
+    doc.setFillColor(...COLORS.red);
+    doc.roundedRect(w - 40, y + 3, 24, 10, 2, 2, 'F');
+    doc.setFontSize(10);
+    doc.text(data.bloodGroup, w - 28, y + 10.5, { align: 'center' });
+  }
+  y += 22;
+
+  // Personal Details
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.primary);
+  doc.text('PERSONAL DETAILS', 14, y);
+  doc.setDrawColor(...COLORS.primary);
+  doc.setLineWidth(0.5);
+  doc.line(14, y + 2, w - 14, y + 2);
+  y += 8;
+
+  const personalRows: string[][] = [];
+  if (data.dateOfBirth) personalRows.push(['Date of Birth', format(new Date(data.dateOfBirth), 'dd MMM yyyy')]);
+  if (data.age) personalRows.push(['Age', `${data.age} years`]);
+  if (data.gender) personalRows.push(['Gender', data.gender]);
+  if (data.phone) personalRows.push(['Phone', data.phone]);
+  if (data.email) personalRows.push(['Email', data.email]);
+  if (data.address) personalRows.push(['Address', `${data.address}${data.city ? ', ' + data.city : ''}${data.state ? ', ' + data.state : ''}${data.pinCode ? ' - ' + data.pinCode : ''}`]);
+  if (data.abhaCardNo) personalRows.push(['ABHA Card No.', data.abhaCardNo]);
+  personalRows.push(['Organ Donor', data.organDonor ? 'Yes' : 'No']);
+
+  autoTable(doc, {
+    startY: y,
+    body: personalRows,
+    theme: 'plain',
+    styles: { fontSize: 9, cellPadding: 2, textColor: COLORS.dark },
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40, textColor: COLORS.gray } },
+    margin: { left: 14, right: 14 },
+  });
+  y = (doc as any).lastAutoTable.finalY + 6;
+
+  // Emergency Contact
+  if (data.emergencyContactName) {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.red);
+    doc.text('EMERGENCY CONTACT', 14, y);
+    doc.setDrawColor(...COLORS.red);
+    doc.line(14, y + 2, w - 14, y + 2);
+    y += 8;
+
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['Name', data.emergencyContactName],
+        ['Relation', data.emergencyContactRelation || '--'],
+        ['Phone', data.emergencyContactPhone || '--'],
+      ],
+      theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 2, textColor: COLORS.dark },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40, textColor: COLORS.gray } },
+      margin: { left: 14, right: 14 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+  }
+
+  // Medical Information
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.accent);
+  doc.text('MEDICAL INFORMATION', 14, y);
+  doc.setDrawColor(...COLORS.accent);
+  doc.line(14, y + 2, w - 14, y + 2);
+  y += 8;
+
+  // Allergies
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.red);
+  doc.text('Allergies:', 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...COLORS.dark);
+  doc.text((data.allergies || []).length > 0 ? data.allergies!.join(', ') : 'None recorded', 44, y);
+  y += 6;
+
+  // Chronic Conditions
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.accent);
+  doc.text('Chronic Conditions:', 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...COLORS.dark);
+  doc.text((data.chronicConditions || []).length > 0 ? data.chronicConditions!.join(', ') : 'None recorded', 56, y);
+  y += 6;
+
+  // Past Surgeries
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.purple);
+  doc.text('Past Surgeries:', 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...COLORS.dark);
+  doc.text((data.pastSurgeries || []).length > 0 ? data.pastSurgeries!.join(', ') : 'None recorded', 50, y);
+  y += 6;
+
+  // Current Medications
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.primary);
+  doc.text('Current Medications:', 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...COLORS.dark);
+  doc.text((data.currentMedications || []).length > 0 ? data.currentMedications!.join(', ') : 'None', 58, y);
+  y += 6;
+
+  // Disabilities
+  if ((data.disabilities || []).length > 0) {
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.gray);
+    doc.text('Disabilities:', 14, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...COLORS.dark);
+    doc.text(data.disabilities!.join(', '), 44, y);
+    y += 6;
+  }
+
+  // Insurance
+  if (data.insurance?.provider) {
+    y += 4;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.green);
+    doc.text('INSURANCE DETAILS', 14, y);
+    doc.setDrawColor(...COLORS.green);
+    doc.line(14, y + 2, w - 14, y + 2);
+    y += 8;
+
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['Provider', data.insurance.provider],
+        ['Policy No.', data.insurance.policyNo || '--'],
+        ['Type', data.insurance.type || '--'],
+        ['Valid Until', data.insurance.validUntil ? format(new Date(data.insurance.validUntil), 'dd MMM yyyy') : '--'],
+        ['Sum Insured', data.insurance.sumInsured || '--'],
+      ],
+      theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 2, textColor: COLORS.dark },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40, textColor: COLORS.gray } },
+      margin: { left: 14, right: 14 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+  }
+
+  // Past Treatments
+  if ((data.pastTreatments || []).length > 0) {
+    // Check if we need a new page
+    if (y > 200) { doc.addPage(); addHeader(doc, 'Medical Profile (continued)', 'Past Treatments'); y = 44; }
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.purple);
+    doc.text('PAST TREATMENTS & HOSPITALIZATIONS', 14, y);
+    doc.setDrawColor(...COLORS.purple);
+    doc.line(14, y + 2, w - 14, y + 2);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Type', 'Treatment', 'Hospital', 'Doctor', 'Date', 'Outcome']],
+      body: data.pastTreatments!.map(t => [
+        t.type,
+        t.title,
+        t.hospital_name || '--',
+        t.doctor_name ? 'Dr. ' + t.doctor_name : '--',
+        t.date ? format(new Date(t.date), 'dd MMM yy') : '--',
+        t.outcome || '--',
+      ]),
+      theme: 'striped',
+      styles: { fontSize: 8, cellPadding: 2.5, textColor: COLORS.dark },
+      headStyles: { fillColor: COLORS.purple, textColor: COLORS.white, fontStyle: 'bold', fontSize: 8 },
+      columnStyles: { 0: { cellWidth: 24 }, 4: { cellWidth: 20 }, 5: { cellWidth: 20 } },
+      margin: { left: 14, right: 14 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+  }
+
+  // Recent Prescriptions
+  if ((data.prescriptions || []).length > 0) {
+    if (y > 220) { doc.addPage(); addHeader(doc, 'Medical Profile (continued)', 'Prescriptions'); y = 44; }
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.primary);
+    doc.text('RECENT PRESCRIPTIONS', 14, y);
+    doc.setDrawColor(...COLORS.primary);
+    doc.line(14, y + 2, w - 14, y + 2);
+    y += 4;
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Doctor', 'Diagnosis', 'Date', 'Medicines', 'Status']],
+      body: data.prescriptions!.map(p => [
+        'Dr. ' + p.doctorName,
+        p.diagnosis,
+        p.date ? format(new Date(p.date), 'dd MMM yy') : '--',
+        String(p.medicineCount),
+        p.status,
+      ]),
+      theme: 'striped',
+      styles: { fontSize: 8, cellPadding: 2.5, textColor: COLORS.dark },
+      headStyles: { fillColor: COLORS.primary, textColor: COLORS.white, fontStyle: 'bold', fontSize: 8 },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
+  addFooter(doc);
+  doc.save(`Patient_Profile_${data.fullName.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }

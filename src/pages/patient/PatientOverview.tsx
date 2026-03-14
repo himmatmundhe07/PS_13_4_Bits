@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { usePatientContext } from '@/hooks/usePatientContext';
 import { supabase } from '@/integrations/supabase/client';
 import JharokhaArch from '@/components/admin/JharokhaArch';
-import { Pill, AlertTriangle, Activity, ShieldCheck, Calendar, FileText, TrendingUp, QrCode, Phone, Plus, Loader2, X } from 'lucide-react';
+import { Pill, AlertTriangle, Activity, ShieldCheck, Calendar, FileText, TrendingUp, QrCode, Phone, Plus, Loader2, X, Download } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import PatientPrescriptionsOverview from '@/components/patient/dashboard/PatientPrescriptionsOverview';
+import { generatePatientProfilePDF } from '@/utils/pdfReports';
 
 const PatientOverview = () => {
   const { patient } = usePatientContext();
@@ -20,6 +21,7 @@ const PatientOverview = () => {
   const [bpReadings, setBpReadings] = useState<any[]>([]);
   const [sugarReadings, setSugarReadings] = useState<any[]>([]);
   const [showLogVitals, setShowLogVitals] = useState(false);
+  const [downloadingProfile, setDownloadingProfile] = useState(false);
 
   const fetchData = () => {
     const pid = patient.id;
@@ -39,6 +41,64 @@ const PatientOverview = () => {
   };
 
   useEffect(() => { fetchData(); }, [patient.id]);
+
+  const handleDownloadProfile = async () => {
+    setDownloadingProfile(true);
+    try {
+      // Fetch past treatments
+      const { data: patientData } = await supabase.from('patients').select('past_treatments').eq('id', patient.id).single();
+      // Fetch recent prescriptions
+      const { data: rxData } = await supabase.from('prescriptions')
+        .select('doctor_name, diagnosis, prescription_date, status, prescription_medicines(count)')
+        .eq('patient_id', patient.id)
+        .order('prescription_date', { ascending: false })
+        .limit(10);
+
+      generatePatientProfilePDF({
+        fullName: patient.full_name,
+        age: patient.age ?? undefined,
+        gender: patient.gender ?? undefined,
+        bloodGroup: patient.blood_group ?? undefined,
+        phone: patient.phone ?? undefined,
+        email: patient.email,
+        address: patient.address ?? undefined,
+        city: patient.city ?? undefined,
+        state: patient.state ?? undefined,
+        pinCode: patient.pin_code ?? undefined,
+        dateOfBirth: patient.date_of_birth ?? undefined,
+        abhaCardNo: patient.abha_card_no ?? undefined,
+        emergencyContactName: patient.emergency_contact_name ?? undefined,
+        emergencyContactRelation: patient.emergency_contact_relation ?? undefined,
+        emergencyContactPhone: patient.emergency_contact_phone ?? undefined,
+        allergies: patient.allergies ?? [],
+        chronicConditions: patient.chronic_conditions ?? [],
+        pastSurgeries: patient.past_surgeries ?? [],
+        disabilities: patient.disabilities ?? [],
+        currentMedications: medications.map((m: any) => m.medicine_name),
+        organDonor: patient.organ_donor ?? false,
+        insurance: patient.has_insurance ? {
+          provider: patient.insurance_provider ?? undefined,
+          policyNo: patient.insurance_policy_no ?? undefined,
+          type: patient.insurance_type ?? undefined,
+          validUntil: patient.insurance_validity_date ?? undefined,
+          sumInsured: patient.sum_insured ?? undefined,
+        } : undefined,
+        pastTreatments: (patientData?.past_treatments as any[]) ?? [],
+        prescriptions: (rxData || []).map((rx: any) => ({
+          doctorName: rx.doctor_name,
+          diagnosis: rx.diagnosis,
+          date: rx.prescription_date,
+          status: rx.status,
+          medicineCount: rx.prescription_medicines?.[0]?.count ?? 0,
+        })),
+      });
+      toast.success('Patient profile PDF downloaded!');
+    } catch (e: any) {
+      toast.error('Failed to generate PDF: ' + e.message);
+    } finally {
+      setDownloadingProfile(false);
+    }
+  };
 
   // Profile completeness
   const fields = [patient.full_name, patient.date_of_birth, patient.gender, patient.blood_group, patient.phone, patient.address, patient.city, patient.state, patient.pin_code, patient.emergency_contact_name];
@@ -71,16 +131,28 @@ const PatientOverview = () => {
               </button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {patient.blood_group && (
-              <span className="px-3 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: '#EF4444' }}>🩸 {patient.blood_group}</span>
-            )}
-            {patient.abha_card_no && (
-              <span className="px-3 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: '#10B981' }}>✅ ABHA Linked</span>
-            )}
-            {alertCount > 0 && (
-              <span className="px-3 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: '#F59E0B' }}>⚠️ {alertCount} Alerts</span>
-            )}
+          <div className="flex flex-col gap-2 items-end">
+            <div className="flex flex-wrap gap-2 justify-end">
+              {patient.blood_group && (
+                <span className="px-3 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: '#EF4444' }}>{patient.blood_group}</span>
+              )}
+              {patient.abha_card_no && (
+                <span className="px-3 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: '#10B981' }}>ABHA Linked</span>
+              )}
+              {alertCount > 0 && (
+                <span className="px-3 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: '#F59E0B' }}>{alertCount} Alerts</span>
+              )}
+            </div>
+            {/* Download Full Profile Button */}
+            <button
+              onClick={handleDownloadProfile}
+              disabled={downloadingProfile}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold text-white disabled:opacity-60 transition-all shadow-sm"
+              style={{ background: '#0891B2' }}
+            >
+              {downloadingProfile ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              {downloadingProfile ? 'Generating PDF...' : 'Download Full Profile'}
+            </button>
           </div>
         </div>
       </div>

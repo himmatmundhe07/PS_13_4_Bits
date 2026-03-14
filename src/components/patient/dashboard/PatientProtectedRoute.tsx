@@ -18,12 +18,17 @@ export interface PatientProfile {
   allergies: string[] | null;
   chronic_conditions: string[] | null;
   current_medications: string[] | null;
+  past_surgeries: string[] | null;
+  disabilities: string[] | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
   emergency_contact_relation: string | null;
   has_insurance: boolean | null;
   insurance_provider: string | null;
+  insurance_policy_no: string | null;
+  insurance_type: string | null;
   insurance_validity_date: string | null;
+  sum_insured: string | null;
   organ_donor: boolean | null;
   address: string | null;
   city: string | null;
@@ -32,6 +37,7 @@ export interface PatientProfile {
   aadhaar_number: string | null;
   supabase_user_id: string;
 }
+
 
 interface Props {
   children: (patient: PatientProfile) => React.ReactNode;
