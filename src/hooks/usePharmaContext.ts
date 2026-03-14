@@ -6,11 +6,10 @@ export interface PharmaProfile {
   id: string;
   pharmacy_name: string;
   owner_name: string | null;
-  email: string;
+  email: string | null;
   phone: string | null;
   address: string | null;
   license_number: string | null;
-  supabase_user_id: string;
 }
 
 export function usePharmaContext() {
@@ -34,20 +33,29 @@ export function usePharmaContext() {
         return;
       }
 
-      // In a real app, we would fetch from a 'pharmacies' table. 
-      // For now, we'll use user metadata as a mock profile since we haven't created the table yet.
-      const mockPharma: PharmaProfile = {
-        id: user.id,
-        pharmacy_name: user.user_metadata?.pharmacy_name || 'Generic Pharmacy',
-        owner_name: user.user_metadata?.full_name || 'Owner',
-        email: user.email || '',
-        phone: null,
-        address: null,
-        license_number: null,
-        supabase_user_id: user.id
-      };
+      // Fetch existing pharmacy profile from the database
+      let { data: profile } = await supabase.from('pharmacies' as any).select('*').eq('id', user.id).single();
 
-      setPharma(mockPharma);
+      // Auto-create profile if first time logging in
+      if (!profile) {
+        const newPharma: PharmaProfile = {
+          id: user.id,
+          pharmacy_name: user.user_metadata?.pharmacy_name || user.user_metadata?.full_name || 'Partner Pharmacy Hub',
+          owner_name: user.user_metadata?.full_name || 'Owner',
+          email: user.email || '',
+          phone: null,
+          address: null,
+          license_number: null
+        };
+        const { data: inserted, error } = await supabase.from('pharmacies' as any).insert([newPharma]).select().single();
+        if (!error && inserted) {
+           profile = inserted as any;
+        } else {
+           profile = newPharma as any; // Fallback to local if table isn't created yet
+        }
+      }
+
+      setPharma(profile as unknown as PharmaProfile);
       setAuthorized(true);
       setLoading(false);
     };

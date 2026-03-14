@@ -499,15 +499,26 @@ const FeedbackDrawer = ({ rx, feedback, onClose }: { rx: any; feedback: any | nu
   const [showPharmaSelect, setShowPharmaSelect] = useState(false);
   const [selectedPharma, setSelectedPharma] = useState('Global Sanjeevani Network (All Partners)');
   const [isSending, setIsSending] = useState(false);
-
-  const mockPharmacies = [
+  const [pharmaciesList, setPharmaciesList] = useState<string[]>([
     'Global Sanjeevani Network (All Partners)',
     'Apollo Pharmacy Network',
     'Wellness Forever',
     'MedPlus Stores',
-    'Netmeds Local Providers',
     'Sanjeevani Partner Pharmacies'
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchPharmacies = async () => {
+      const { data, error } = await supabase.from('pharmacies' as any).select('pharmacy_name');
+      if (!error && data && data.length > 0) {
+        const uniqueNames = Array.from(new Set(data.map((p: any) => p.pharmacy_name)));
+        setPharmaciesList(['Global Sanjeevani Network (All Partners)', ...uniqueNames]);
+      }
+    };
+    if (showPharmaSelect) {
+      fetchPharmacies();
+    }
+  }, [showPharmaSelect]);
 
   return (
     <div className="fixed inset-0 z-[90] flex justify-end">
@@ -604,7 +615,7 @@ const FeedbackDrawer = ({ rx, feedback, onClose }: { rx: any; feedback: any | nu
                       onChange={(e) => setSelectedPharma(e.target.value)}
                     >
                       <option value="">-- Choose Pharmacy Network --</option>
-                      {mockPharmacies.map(p => (
+                      {pharmaciesList.map(p => (
                         <option key={p} value={p}>{p}</option>
                       ))}
                     </select>
