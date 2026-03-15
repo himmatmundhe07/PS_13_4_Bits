@@ -46,7 +46,7 @@ const AnkleCircles: React.FC<AnimationProps> = ({ size = 120, color = '#0891B2',
     <ellipse cx="60" cy="80" rx="22" ry="14" stroke={accentColor} strokeWidth="2" strokeDasharray="4 3" opacity="0.4" style={{ animation: 'trail-fade 2s ease-in-out infinite' }} />
     {/* Foot */}
     <g style={{ animation: 'rotate-ankle 2s linear infinite', transformOrigin: '60px 58px' }}>
-      <ellipse cx="75" cy="72" rx="18" ry="9" rx2="7" fill={color} opacity="0.9" transform="rotate(-20 60 58)" />
+      <ellipse cx="75" cy="72" rx="18" ry="9" fill={color} opacity="0.9" transform="rotate(-20 60 58)" />
     </g>
     <text x="60" y="110" textAnchor="middle" fontSize="9" fill={accentColor} fontFamily="Inter,sans-serif">ANKLE CIRCLES</text>
   </svg>

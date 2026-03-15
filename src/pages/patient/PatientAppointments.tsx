@@ -262,7 +262,7 @@ const AppointmentCard = ({ appt: a, onCancel }: { appt: any; onCancel: (id: stri
         {/* Rejection reason */}
         {isCancelled && a.cancellation_reason && (
           <div className="rounded-lg p-3 mb-3 flex items-start gap-2" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-            <AlertCircle size={14} style={{ color: '#EF4444', shrink: 0 }} />
+            <AlertCircle size={14} style={{ color: '#EF4444', flexShrink: 0 }} />
             <div>
               <p className="text-[11px] font-semibold" style={{ color: '#DC2626' }}>Rejection reason:</p>
               <p className="text-[12px]" style={{ color: '#7F1D1D' }}>{a.cancellation_reason}</p>
@@ -307,18 +307,34 @@ const AppointmentCard = ({ appt: a, onCancel }: { appt: any; onCancel: (id: stri
 
 /* ──────────────── BOOK APPOINTMENT MODAL ──────────────── */
 const BookAppointmentModal = ({ patientId, onClose, onSaved }: { patientId: string; onClose: () => void; onSaved: () => void }) => {
+  const [hospitals, setHospitals] = useState<any[]>([]);
   const [form, setForm] = useState({
-    doctor_name: '', specialization: '', hospital_name: '',
+    doctor_name: '', specialization: '', hospital_name: '', hospital_id: '',
     appointment_date: '', appointment_time: '', reason: '',
   });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchHospitals = async () => {
+      const { data } = await supabase.from('hospitals').select('id, hospital_name, city, state');
+      setHospitals(data || []);
+    };
+    fetchHospitals();
+  }, []);
 
   const handleSave = async () => {
     if (!form.doctor_name || !form.appointment_date) { toast.error('Doctor name and date are required'); return; }
     setSaving(true);
     try {
       await supabase.from('patient_appointments').insert([{
-        ...form, patient_id: patientId, status: 'Pending Confirmation',
+        doctor_name: form.doctor_name,
+        specialization: form.specialization,
+        hospital_name: form.hospital_name,
+        hospital_id: form.hospital_id || null,
+        appointment_date: form.appointment_date,
+        appointment_time: form.appointment_time,
+        reason: form.reason,
+        patient_id: patientId, status: 'Pending Confirmation',
         booked_by: 'Patient',
       }]);
       toast.success('Appointment request sent! Awaiting hospital confirmation.');
@@ -348,7 +364,28 @@ const BookAppointmentModal = ({ patientId, onClose, onSaved }: { patientId: stri
           <div className="space-y-3">
             <div><label className="field-label">Doctor Name *</label><input className="field-input" value={form.doctor_name} onChange={e => setForm(f => ({ ...f, doctor_name: e.target.value }))} /></div>
             <div><label className="field-label">Specialization</label><input className="field-input" value={form.specialization} onChange={e => setForm(f => ({ ...f, specialization: e.target.value }))} /></div>
-            <div><label className="field-label">Hospital Name</label><input className="field-input" value={form.hospital_name} onChange={e => setForm(f => ({ ...f, hospital_name: e.target.value }))} /></div>
+            <div>
+              <label className="field-label">Select Hospital</label>
+              <select 
+                className="field-input" 
+                value={form.hospital_id} 
+                onChange={e => {
+                  const selectedHospital = hospitals.find(h => h.id === e.target.value);
+                  setForm(f => ({
+                    ...f, 
+                    hospital_id: e.target.value,
+                    hospital_name: selectedHospital ? selectedHospital.hospital_name : ''
+                  }));
+                }}
+              >
+                <option value="">-- Choose an ecosystem hospital --</option>
+                {hospitals.map(h => (
+                  <option key={h.id} value={h.id}>
+                    {h.hospital_name} {h.city ? `(${h.city})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className="field-label">Date *</label><input className="field-input" type="date" min={format(new Date(), 'yyyy-MM-dd')} value={form.appointment_date} onChange={e => setForm(f => ({ ...f, appointment_date: e.target.value }))} /></div>
               <div><label className="field-label">Preferred Time</label><input className="field-input" type="time" value={form.appointment_time} onChange={e => setForm(f => ({ ...f, appointment_time: e.target.value }))} /></div>

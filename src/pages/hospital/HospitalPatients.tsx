@@ -105,11 +105,15 @@ const HospitalPatients = () => {
     if (!hospital) return;
     let q = supabase
       .from('hospital_patients')
-      .select('*, patients(id, full_name, profile_photo_url, date_of_birth, gender, blood_group, abha_id, allergies, chronic_conditions, current_medications, past_surgeries, emergency_contact_name, emergency_contact_phone, emergency_contact_relation, insurance_provider, insurance_policy_no, phone, organ_donor, email, city, district, state)')
+      .select('*, patients(*)')
       .eq('hospital_id', hospital.id)
       .order('admitted_at', { ascending: false });
     if (filter !== 'All') q = q.eq('relationship_type', filter);
-    const { data } = await q;
+    const { data, error } = await q;
+    if (error) {
+      console.error("Error fetching patients:", error);
+      toast.error("Failed to load patients");
+    }
     setPatients(data || []);
     setLoading(false);
   }, [hospital, filter]);
