@@ -81,6 +81,9 @@ Organizations that want better emergency response infrastructure.
 
 # 5. Key Features
 
+## Unified Authentication
+A seamless, centralized login and registration portal for Patients, Hospitals, and Pharmacies, ensuring secure role-based access across the platform.
+
 ## Patient System
 
 ### Patient Registration
@@ -105,6 +108,9 @@ Patients can maintain:
 - Allergies
 - Medication details
 - Medical reports
+
+### AI-Powered Fitness & Recovery Tracker
+Patients receive personalized, AI-generated fitness and recovery plans tailored to their specific health conditions and post-treatment needs.
 
 ### Emergency Contact System
 Hospitals can quickly view and contact emergency contacts.
@@ -131,6 +137,7 @@ Displays key operational data:
 Hospitals can:
 
 - View admitted patients
+- Filter patient records using localized geographic data (State, District)
 - Access patient medical profiles
 - Record treatment notes
 - Upload medical reports
@@ -167,6 +174,21 @@ Hospitals can track:
 - Occupied beds
 - Ward allocation
 - Bed assignments for admitted patients
+
+---
+
+## Pharmacy Partner System
+
+Pharmacies can register as verified partners on the Sanjeevani platform to handle medications and prescriptions seamlessly.
+
+### Registration & Subscription
+Pharmacies securely sign up and purchase active subscription plans to gain verified partner status.
+
+### Prescription & Order Management
+Pharmacies manage digital prescriptions directly from hospitals and process patient medical orders.
+
+### Revenue & Analytics
+Partner pharmacies can monitor their daily revenue, track commissions, and download comprehensive monthly sales statements.
 
 ---
 
